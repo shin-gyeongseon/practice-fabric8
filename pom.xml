@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.5.3</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>io.shimshim</groupId>
+    <artifactId>fabricPractice</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>fabricPractice</name>
+    <description>fabricPractice</description>
+    <url/>
+    <licenses>
+        <license/>
+    </licenses>
+    <developers>
+        <developer/>
+    </developers>
+    <scm>
+        <connection/>
+        <developerConnection/>
+        <tag/>
+        <url/>
+    </scm>
+    <properties>
+        <java.version>17</java.version>
+        <fabric8.version>7.3.1</fabric8.version>  <!-- 2025-05 최신 안정판  [oai_citation:0‡mvnrepository.com](https://mvnrepository.com/artifact/io.fabric8/java-generator-cli?utm_source=chatgpt.com) -->
+        <sundrio.version>0.200.4</sundrio.version> <!-- builder-annotations 최신판  [oai_citation:1‡central.sonatype.com](https://central.sonatype.com/artifact/io.sundr/builder-annotations/0.24.3) -->
+        <lombok.version>1.18.32</lombok.version>
+    </properties>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Fabric8 기본 클라이언트 -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>kubernetes-client</artifactId>
+            <version>${fabric8.version}</version>
+        </dependency>
+
+        <!-- ***컴파일 시 필요한 어노테이션 모음*** -->
+        <dependency>
+            <groupId>io.fabric8</groupId>
+            <artifactId>generator-annotations</artifactId>
+            <version>${fabric8.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.sundr</groupId>
+            <artifactId>builder-annotations</artifactId>
+            <version>${sundrio.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.fabric8</groupId>
+                <artifactId>java-generator-maven-plugin</artifactId>
+                <version>${fabric8.version}</version> <!-- 7.3.1  [oai_citation:2‡mvnrepository.com](https://mvnrepository.com/artifact/io.fabric8/java-generator-maven-plugin) -->
+                <executions>
+                    <execution>
+                        <id>generate-crd-models</id>
+                        <goals><goal>generate</goal></goals>
+                        <phase>generate-sources</phase>
+                        <configuration>
+                            <!-- 입력: CRD 디렉터리 -->
+                            <source>${project.basedir}/src/main/resources/crds/ray/rayclusters-crd.yaml</source>
+                            <!-- 출력: 생성 소스 위치(기본값 그대로 가능) -->
+<!--                            <target>${project.build.directory}/generated-sources/java</target>-->
+                            <target>${project.basedir}/src/main/java</target>
+                            <packageOverrides>
+                                <io.ray.v1>io.shimshim.fabricpractice.model.ray.cluster.v1</io.ray.v1>
+                                <io.ray.v1alpha1>io.shimshim.fabricpractice.model.ray.cluster.v1alpha1</io.ray.v1alpha1>
+                            </packageOverrides>
+
+                            <!-- **POINT**: 빌더/롬복 어노테이션 삽입 -->
+                            <extraAnnotations>true</extraAnnotations> <!--  [oai_citation:3‡raw.githubusercontent.com](https://raw.githubusercontent.com/fabric8io/kubernetes-client/main/doc/java-generation-from-CRD.md) -->
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- ② 컴파일러 설정 (JDK 21 + annotation processors) -->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${java.version}</release>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>io.sundr</groupId>
+                            <artifactId>builder-annotations</artifactId>
+                            <version>${sundrio.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
